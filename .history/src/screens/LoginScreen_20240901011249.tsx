@@ -1,53 +1,35 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useNavigation } from '@react-navigation/native';
-import { auth, firestore } from './../firebase'; // Adjust path as needed
 
 const LoginScreen = () => {
-  const [email, setEmail] = useState(''); // Changed from username to email
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [selectedRole, setSelectedRole] = useState('');
-  const [userSession, setUserSession] = useState(null); // State to store user session
   const navigation = useNavigation();
 
-  const handleLogin = async () => {
-    if (!email || !password) {
-      Alert.alert('Error', 'Email and password cannot be empty.');
-      return;
-    }
+  const handleLogin = () => {
+    // Log the username, password, and role to ensure they are correct
+    console.log('Username:', username);
+    console.log('Password:', password);
+    console.log('Selected Role:', selectedRole);
 
-    if (!selectedRole) {
-      Alert.alert('Error', 'Please select a role before logging in.');
-      return;
-    }
-
-    try {
-      // Sign in the user with email and password
-      const userCredential = await auth.signInWithEmailAndPassword(email, password);
-      const user = userCredential.user;
-
-      // Fetch user data from Firestore
-      const userDoc = await firestore.collection('users').doc(user.uid).get();
-      const userData = userDoc.data();
-
-      // Store user session details in component state
-      setUserSession(userData);
-
-      // Navigate to the appropriate screen based on the role
+    // Check if a role is selected
+    if (selectedRole) {
+      // Navigate to the respective dashboard based on the selected role
       switch (selectedRole) {
         case 'patient':
-          navigation.navigate('Main', { user: userData });
+          navigation.navigate('Main');
           break;
         case 'pharmacy':
-          navigation.navigate('Pharmacy', { user: userData });
+          navigation.navigate('pharmacy');
           break;
         default:
           console.log('Invalid role selected.');
       }
-    } catch (error) {
-      console.error('Error logging in:', error);
-      Alert.alert('Error', 'Failed to log in. Please check your credentials and try again.');
+    } else {
+      console.log('Please select a role before logging in.');
     }
   };
 
@@ -74,14 +56,13 @@ const LoginScreen = () => {
         </View>
 
         <View style={styles.inputContainer}>
-          <Icon name="email-outline" size={24} style={styles.inputIcon} />
+          <Icon name="account-outline" size={24} style={styles.inputIcon} />
           <TextInput
-            placeholder="Email"
-            value={email}
-            onChangeText={text => setEmail(text)}
+            placeholder="Username"
+            value={username}
+            onChangeText={text => setUsername(text)}
             style={styles.input}
             placeholderTextColor="black"
-            keyboardType="email-address"
           />
         </View>
         <View style={styles.inputContainer}>

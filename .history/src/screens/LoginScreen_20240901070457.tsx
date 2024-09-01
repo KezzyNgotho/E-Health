@@ -8,7 +8,6 @@ const LoginScreen = () => {
   const [email, setEmail] = useState(''); // Changed from username to email
   const [password, setPassword] = useState('');
   const [selectedRole, setSelectedRole] = useState('');
-  const [userSession, setUserSession] = useState(null); // State to store user session
   const navigation = useNavigation();
 
   const handleLogin = async () => {
@@ -31,8 +30,8 @@ const LoginScreen = () => {
       const userDoc = await firestore.collection('users').doc(user.uid).get();
       const userData = userDoc.data();
 
-      // Store user session details in component state
-      setUserSession(userData);
+      // Store user session details in local storage
+      await localStorage.setItem('userSession', JSON.stringify(userData));
 
       // Navigate to the appropriate screen based on the role
       switch (selectedRole) {

@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Button, ScrollView } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useNavigation } from '@react-navigation/native';
-import { auth ,firestore} from '../firebase'; // Adjust the path as necessary
+import DocumentPicker from 'react-native-document-picker'; // Add this dependency
 
 const RegistrationScreen = () => {
   const navigation = useNavigation();
@@ -21,49 +21,53 @@ const RegistrationScreen = () => {
   const [emergencyContacts, setEmergencyContacts] = useState('');
   const [pharmacyName, setPharmacyName] = useState('');
   const [licenseNumber, setLicenseNumber] = useState('');
-  const [pharmacyLocation, setPharmacyLocation] = useState('');
+  const [pharmacyLocation, setPharmacyLocation] = useState(''); // Added location field
+  const [documents, setDocuments] = useState([]);
 
-  const handleRegister = async () => {
-    if (password === confirmPassword) {
-      try {
-        // Register the user with email and password
-        const userCredential = await auth.createUserWithEmailAndPassword(email, password);
-        const user = userCredential.user;
-  
-        // Prepare user data
-        const userData = {
-          name,
-          email,
-          phone,
-          address,
-          dob,
-          userType,
-          ...(userType === 'patient' ? {
-            allergies,
-            chronicConditions,
-            prescriptionHistory,
-            insuranceDetails,
-            emergencyContacts
-          } : {
-            pharmacyName,
-            licenseNumber,
-            pharmacyLocation
-          })
-        };
-  
-        // Store user data in Firestore
-        await firestore.collection('users').doc(user.uid).set(userData);
-  
-        console.log('User registered and data stored successfully');
-        navigation.navigate('Login');
-      } catch (error) {
-        console.error('Error registering user:', error);
+  const handleDocumentPicker = async () => {
+    try {
+      const results = await DocumentPicker.pickMultiple({
+        type: [DocumentPicker.types.allFiles],
+      });
+      setDocuments(results);
+    } catch (err) {
+      if (DocumentPicker.isCancel(err)) {
+        console.log('Canceled from single doc picker');
+      } else {
+        throw err;
       }
+    }
+  };
+
+  const handleRegister = () => {
+    if (password === confirmPassword) {
+      // Implement registration logic here
+      console.log('User Type:', userType);
+      console.log('Name:', name);
+      console.log('Email:', email);
+      console.log('Phone:', phone);
+      console.log('Address:', address);
+      console.log('DOB:', dob);
+      console.log('Password:', password);
+      if (userType === 'patient') {
+        console.log('Allergies:', allergies);
+        console.log('Chronic Conditions:', chronicConditions);
+        console.log('Prescription History:', prescriptionHistory);
+        console.log('Insurance Details:', insuranceDetails);
+        console.log('Emergency Contacts:', emergencyContacts);
+      }
+      if (userType === 'pharmacy') {
+        console.log('Pharmacy Name:', pharmacyName);
+        console.log('License Number:', licenseNumber);
+        console.log('Pharmacy Location:', pharmacyLocation); // Added location log
+        console.log('Documents:', documents);
+      }
+
+      navigation.navigate('Login');
     } else {
       console.log('Passwords do not match');
     }
   };
-  
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
@@ -202,7 +206,7 @@ const RegistrationScreen = () => {
                 />
               </View>
               <View style={styles.inputContainer}>
-                <Icon name="contacts" size={24} style={styles.inputIcon} />
+                <Icon name="contacts-outline" size={24} style={styles.inputIcon} />
                 <TextInput
                   placeholder="Emergency Contacts"
                   value={emergencyContacts}
@@ -217,7 +221,7 @@ const RegistrationScreen = () => {
           {userType === 'pharmacy' && (
             <>
               <View style={styles.inputContainer}>
-                <Icon name="pharmacy" size={24} style={styles.inputIcon} />
+                <Icon name="store" size={24} style={styles.inputIcon} />
                 <TextInput
                   placeholder="Pharmacy Name"
                   value={pharmacyName}
@@ -227,7 +231,7 @@ const RegistrationScreen = () => {
                 />
               </View>
               <View style={styles.inputContainer}>
-                <Icon name="badge" size={24} style={styles.inputIcon} />
+                <Icon name="identifier" size={24} style={styles.inputIcon} />
                 <TextInput
                   placeholder="License Number"
                   value={licenseNumber}
@@ -237,7 +241,7 @@ const RegistrationScreen = () => {
                 />
               </View>
               <View style={styles.inputContainer}>
-                <Icon name="map-marker" size={24} style={styles.inputIcon} />
+                <Icon name="map-marker-outline" size={24} style={styles.inputIcon} /> {/* Map marker icon for location */}
                 <TextInput
                   placeholder="Pharmacy Location"
                   value={pharmacyLocation}
@@ -246,9 +250,16 @@ const RegistrationScreen = () => {
                   placeholderTextColor="black"
                 />
               </View>
+              <Button title="Upload Documents" onPress={handleDocumentPicker} />
+              {documents.length > 0 && (
+                <View style={styles.documentsContainer}>
+                  {documents.map((doc, index) => (
+                    <Text key={index} style={styles.documentText}>{doc.name}</Text>
+                  ))}
+                </View>
+              )}
             </>
           )}
-
           <TouchableOpacity onPress={handleRegister} style={styles.button}>
             <Text style={styles.buttonText}>Register</Text>
           </TouchableOpacity>
@@ -262,55 +273,63 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 20,
-    backgroundColor: '#ffffff',
+    backgroundColor: '#fff',
   },
   title: {
     fontSize: 24,
     fontWeight: 'bold',
     marginBottom: 20,
-    color: 'black',
+    textAlign: 'center',
   },
   label: {
     fontSize: 18,
     marginBottom: 10,
-    color: 'black',
   },
   userTypeButton: {
-    backgroundColor: '#007bff',
+    backgroundColor: '#ddd',
     padding: 10,
+    marginVertical: 5,
     borderRadius: 5,
-    marginBottom: 10,
+    alignItems: 'center',
   },
   userTypeText: {
-    color: '#ffffff',
     fontSize: 18,
+    color: '#333',
   },
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    borderBottomWidth: 1,
-    borderBottomColor: '#cccccc',
     marginBottom: 15,
+    borderBottomWidth: 1,
+    borderBottomColor: '#ccc',
+  },
+  inputIcon: {
+    marginRight: 10,
+    color: '#333',
   },
   input: {
     flex: 1,
     padding: 10,
     fontSize: 16,
-    color: 'black',
-  },
-  inputIcon: {
-    marginRight: 10,
-    color: '#007bff',
+    color: '#333',
   },
   button: {
-    backgroundColor: '#007bff',
+    backgroundColor: '#007BFF',
     padding: 15,
     borderRadius: 5,
     alignItems: 'center',
   },
   buttonText: {
-    color: '#ffffff',
+    color: '#fff',
     fontSize: 18,
+    fontWeight: 'bold',
+  },
+  documentsContainer: {
+    marginTop: 15,
+  },
+  documentText: {
+    fontSize: 16,
+    color: '#333',
   },
 });
 

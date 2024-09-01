@@ -2,13 +2,13 @@ import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useNavigation } from '@react-navigation/native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { auth, firestore } from './../firebase'; // Adjust path as needed
 
 const LoginScreen = () => {
   const [email, setEmail] = useState(''); // Changed from username to email
   const [password, setPassword] = useState('');
   const [selectedRole, setSelectedRole] = useState('');
-  const [userSession, setUserSession] = useState(null); // State to store user session
   const navigation = useNavigation();
 
   const handleLogin = async () => {
@@ -31,8 +31,8 @@ const LoginScreen = () => {
       const userDoc = await firestore.collection('users').doc(user.uid).get();
       const userData = userDoc.data();
 
-      // Store user session details in component state
-      setUserSession(userData);
+      // Store user session details in AsyncStorage
+      await AsyncStorage.setItem('userSession', JSON.stringify(userData));
 
       // Navigate to the appropriate screen based on the role
       switch (selectedRole) {

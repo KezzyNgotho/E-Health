@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, SafeAreaView, Animated, Modal } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, SafeAreaView, Animated } from 'react-native';
 import { Card } from 'react-native-elements';
 import { ProgressChart } from 'react-native-chart-kit';
 import { Sidebar } from './Sidebar'; // Ensure the Sidebar component is correctly imported
@@ -24,22 +24,13 @@ export default function InventorySummaryScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* Sidebar Modal */}
-      <Modal
-        transparent={true}
-        visible={isSidebarOpen}
-        animationType="slide"
-        onRequestClose={() => setSidebarOpen(false)}
-      >
-        <View style={styles.modalContainer}>
-          <View style={styles.sidebar}>
-            <Sidebar onClose={() => setSidebarOpen(false)} onLogout={() => {/* handle logout */}} />
-          </View>
-        </View>
-      </Modal>
+      {/* Sidebar */}
+      <Animated.View style={[styles.sidebar, { transform: [{ translateX: animation }] }]}>
+        <Sidebar onClose={() => setSidebarOpen(false)} onLogout={() => {/* handle logout */}} />
+      </Animated.View>
 
       {/* Main Content */}
-      <View style={styles.mainContent}>
+      <Animated.View style={[styles.mainContent, { marginLeft: isSidebarOpen ? 250 : 0 }]}>
         <View style={styles.headerWrapper}>
           {/* Hamburger Menu Button */}
           <TouchableOpacity style={styles.menuButton} onPress={toggleSidebar}>
@@ -112,7 +103,7 @@ export default function InventorySummaryScreen() {
             </View>
           </Card>
         </ScrollView>
-      </View>
+      </Animated.View>
     </SafeAreaView>
   );
 }
@@ -120,23 +111,25 @@ export default function InventorySummaryScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-  },
-  modalContainer: {
-    flex: 1,
-    justifyContent: 'flex-start',
-    alignItems: 'flex-start',
+    flexDirection: 'row',
   },
   sidebar: {
+    position: 'absolute',
+    top: 0,
+    bottom: 0,
+    left: 0,
     width: 250, // Width of the sidebar
     backgroundColor: '#004d40',
     zIndex: 1, // Ensure sidebar is on top
     elevation: 5,
-    flex: 1,
-    paddingTop: 20, // Adjust for top padding
   },
   mainContent: {
     flex: 1,
     backgroundColor: '#f5f5f5',
+    marginLeft: 0, // Ensure margin is correct for main content
+  },
+  scrollContent: {
+    flex: 1,
   },
   headerWrapper: {
     flexDirection: 'row',

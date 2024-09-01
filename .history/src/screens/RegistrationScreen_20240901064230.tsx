@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useNavigation } from '@react-navigation/native';
-import { auth ,firestore} from '../firebase'; // Adjust the path as necessary
+import { auth } from '..'; // Adjust the path as necessary
 
 const RegistrationScreen = () => {
   const navigation = useNavigation();
@@ -27,34 +27,12 @@ const RegistrationScreen = () => {
     if (password === confirmPassword) {
       try {
         // Register the user with email and password
-        const userCredential = await auth.createUserWithEmailAndPassword(email, password);
-        const user = userCredential.user;
-  
-        // Prepare user data
-        const userData = {
-          name,
-          email,
-          phone,
-          address,
-          dob,
-          userType,
-          ...(userType === 'patient' ? {
-            allergies,
-            chronicConditions,
-            prescriptionHistory,
-            insuranceDetails,
-            emergencyContacts
-          } : {
-            pharmacyName,
-            licenseNumber,
-            pharmacyLocation
-          })
-        };
-  
-        // Store user data in Firestore
-        await firestore.collection('users').doc(user.uid).set(userData);
-  
-        console.log('User registered and data stored successfully');
+        await auth.createUserWithEmailAndPassword(email, password);
+
+        // Add additional user data to Firestore or Realtime Database if necessary
+        // You can use `firebase.firestore()` for Firestore operations
+
+        console.log('User registered successfully');
         navigation.navigate('Login');
       } catch (error) {
         console.error('Error registering user:', error);
@@ -63,7 +41,6 @@ const RegistrationScreen = () => {
       console.log('Passwords do not match');
     }
   };
-  
 
   return (
     <ScrollView contentContainerStyle={styles.container}>

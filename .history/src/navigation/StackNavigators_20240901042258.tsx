@@ -8,7 +8,6 @@ import PharmacyDashboard from "../screens/PharmacyDashboard";
 import { BottomTabNavigator } from "./TabNavigator";
 import { PharmacyBottomTabNavigator } from "../navigation/PharmacyBottomTabNavigator";
 import CartScreen from '../screens/CartScreen'
-import { Inventory } from "../screens/Inventory";
 
 const Stack = createNativeStackNavigator();
 
@@ -33,7 +32,6 @@ const PharmacyStackNavigator = () => {
       initialRouteName="PharmacyDashboard"
     >
       <Stack.Screen name="PharmacyDashboard" component={PharmacyDashboard} />
-      <Stack.Screen name="Inventory" component={Inventory} />
     </Stack.Navigator>
   );
 };

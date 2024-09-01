@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Button, ScrollView } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useNavigation } from '@react-navigation/native';
-import { auth ,firestore} from '../firebase'; // Adjust the path as necessary
+import DocumentPicker from 'react-native-document-picker';
+import { firestoreInstance } from './firebase'; // Import Firestore
 
 const RegistrationScreen = () => {
   const navigation = useNavigation();
@@ -22,39 +23,57 @@ const RegistrationScreen = () => {
   const [pharmacyName, setPharmacyName] = useState('');
   const [licenseNumber, setLicenseNumber] = useState('');
   const [pharmacyLocation, setPharmacyLocation] = useState('');
+  const [documents, setDocuments] = useState([]);
+
+  const handleDocumentPicker = async () => {
+    try {
+      const results = await DocumentPicker.pickMultiple({
+        type: [DocumentPicker.types.allFiles],
+      });
+      setDocuments(results);
+    } catch (err) {
+      if (DocumentPicker.isCancel(err)) {
+        console.log('Canceled from single doc picker');
+      } else {
+        throw err;
+      }
+    }
+  };
 
   const handleRegister = async () => {
     if (password === confirmPassword) {
+      const userData = {
+        name,
+        email,
+        phone,
+        address,
+        dob,
+        userType,
+        password, // Consider hashing the password before storing it
+      };
+
+      if (userType === 'patient') {
+        Object.assign(userData, {
+          allergies,
+          chronicConditions,
+          prescriptionHistory,
+          insuranceDetails,
+          emergencyContacts,
+        });
+      }
+
+      if (userType === 'pharmacy') {
+        Object.assign(userData, {
+          pharmacyName,
+          licenseNumber,
+          pharmacyLocation,
+          documents: documents.map(doc => ({ uri: doc.uri, name: doc.name })),
+        });
+      }
+
       try {
-        // Register the user with email and password
-        const userCredential = await auth.createUserWithEmailAndPassword(email, password);
-        const user = userCredential.user;
-  
-        // Prepare user data
-        const userData = {
-          name,
-          email,
-          phone,
-          address,
-          dob,
-          userType,
-          ...(userType === 'patient' ? {
-            allergies,
-            chronicConditions,
-            prescriptionHistory,
-            insuranceDetails,
-            emergencyContacts
-          } : {
-            pharmacyName,
-            licenseNumber,
-            pharmacyLocation
-          })
-        };
-  
-        // Store user data in Firestore
-        await firestore.collection('users').doc(user.uid).set(userData);
-  
-        console.log('User registered and data stored successfully');
+        await firestoreInstance.collection('users').add(userData);
+        console.log('User registered successfully');
         navigation.navigate('Login');
       } catch (error) {
         console.error('Error registering user:', error);
@@ -63,7 +82,6 @@ const RegistrationScreen = () => {
       console.log('Passwords do not match');
     }
   };
-  
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
@@ -202,7 +220,7 @@ const RegistrationScreen = () => {
                 />
               </View>
               <View style={styles.inputContainer}>
-                <Icon name="contacts" size={24} style={styles.inputIcon} />
+                <Icon name="contacts-outline" size={24} style={styles.inputIcon} />
                 <TextInput
                   placeholder="Emergency Contacts"
                   value={emergencyContacts}
@@ -227,7 +245,7 @@ const RegistrationScreen = () => {
                 />
               </View>
               <View style={styles.inputContainer}>
-                <Icon name="badge" size={24} style={styles.inputIcon} />
+                <Icon name="id-card-outline" size={24} style={styles.inputIcon} />
                 <TextInput
                   placeholder="License Number"
                   value={licenseNumber}
@@ -237,7 +255,7 @@ const RegistrationScreen = () => {
                 />
               </View>
               <View style={styles.inputContainer}>
-                <Icon name="map-marker" size={24} style={styles.inputIcon} />
+                <Icon name="map-marker-outline" size={24} style={styles.inputIcon} />
                 <TextInput
                   placeholder="Pharmacy Location"
                   value={pharmacyLocation}
@@ -246,6 +264,16 @@ const RegistrationScreen = () => {
                   placeholderTextColor="black"
                 />
               </View>
+              <TouchableOpacity onPress={handleDocumentPicker} style={styles.uploadButton}>
+                <Text style={styles.uploadButtonText}>Upload Documents</Text>
+              </TouchableOpacity>
+              {documents.length > 0 && (
+                <View style={styles.documentList}>
+                  {documents.map((doc, index) => (
+                    <Text key={index} style={styles.documentText}>{doc.name}</Text>
+                  ))}
+                </View>
+              )}
             </>
           )}
 
@@ -261,56 +289,71 @@ const RegistrationScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 20,
-    backgroundColor: '#ffffff',
+    padding: 16,
+    backgroundColor: 'white',
   },
   title: {
     fontSize: 24,
     fontWeight: 'bold',
     marginBottom: 20,
-    color: 'black',
+    textAlign: 'center',
   },
   label: {
-    fontSize: 18,
-    marginBottom: 10,
-    color: 'black',
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginVertical: 10,
   },
   userTypeButton: {
-    backgroundColor: '#007bff',
     padding: 10,
+    backgroundColor: '#f0f0f0',
     borderRadius: 5,
-    marginBottom: 10,
+    marginVertical: 5,
+    alignItems: 'center',
   },
   userTypeText: {
-    color: '#ffffff',
     fontSize: 18,
   },
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     borderBottomWidth: 1,
-    borderBottomColor: '#cccccc',
-    marginBottom: 15,
-  },
-  input: {
-    flex: 1,
-    padding: 10,
-    fontSize: 16,
-    color: 'black',
+    borderBottomColor: '#ddd',
+    marginBottom: 20,
   },
   inputIcon: {
     marginRight: 10,
-    color: '#007bff',
+  },
+  input: {
+    flex: 1,
+    fontSize: 16,
+    paddingVertical: 10,
   },
   button: {
-    backgroundColor: '#007bff',
-    padding: 15,
+    backgroundColor: '#007BFF',
+    paddingVertical: 12,
     borderRadius: 5,
     alignItems: 'center',
   },
   buttonText: {
-    color: '#ffffff',
+    color: 'white',
     fontSize: 18,
+  },
+  uploadButton: {
+    backgroundColor: '#4CAF50',
+    paddingVertical: 12,
+    borderRadius: 5,
+    alignItems: 'center',
+    marginTop: 10,
+  },
+  uploadButtonText: {
+    color: 'white',
+    fontSize: 16,
+  },
+  documentList: {
+    marginTop: 10,
+  },
+  documentText: {
+    fontSize: 14,
   },
 });
 

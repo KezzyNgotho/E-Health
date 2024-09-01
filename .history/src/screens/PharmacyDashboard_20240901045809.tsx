@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, SafeAreaView, Animated, Modal } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, SafeAreaView, Animated } from 'react-native';
 import { Card } from 'react-native-elements';
 import { ProgressChart } from 'react-native-chart-kit';
-import { Sidebar } from './Sidebar'; // Ensure the Sidebar component is correctly imported
+import { Sidebar } from './Sidebar'; // Import the Sidebar component
 
 export default function InventorySummaryScreen() {
   const [isSidebarOpen, setSidebarOpen] = useState(false);
-  const [animation] = useState(new Animated.Value(-250)); // Start animation from off-screen
+  const [animation] = useState(new Animated.Value(0)); // Initialize animation value
 
   const data = {
     labels: ["Chicken Karage", "Beef Nyakinyo", "Chicken Katsu"],
@@ -16,7 +16,7 @@ export default function InventorySummaryScreen() {
   const toggleSidebar = () => {
     setSidebarOpen(!isSidebarOpen);
     Animated.timing(animation, {
-      toValue: isSidebarOpen ? -250 : 0, // Slide in/out effect
+      toValue: isSidebarOpen ? 0 : 250, // Change 250 to the width of your sidebar
       duration: 300,
       useNativeDriver: true,
     }).start();
@@ -24,22 +24,11 @@ export default function InventorySummaryScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* Sidebar Modal */}
-      <Modal
-        transparent={true}
-        visible={isSidebarOpen}
-        animationType="slide"
-        onRequestClose={() => setSidebarOpen(false)}
-      >
-        <View style={styles.modalContainer}>
-          <View style={styles.sidebar}>
-            <Sidebar onClose={() => setSidebarOpen(false)} onLogout={() => {/* handle logout */}} />
-          </View>
-        </View>
-      </Modal>
+      {/* Sidebar */}
+      {isSidebarOpen && <Sidebar onClose={() => setSidebarOpen(false)} onLogout={() => {/* handle logout */}} />}
 
       {/* Main Content */}
-      <View style={styles.mainContent}>
+      <Animated.View style={[styles.mainContent, { transform: [{ translateX: animation }] }]}>
         <View style={styles.headerWrapper}>
           {/* Hamburger Menu Button */}
           <TouchableOpacity style={styles.menuButton} onPress={toggleSidebar}>
@@ -62,7 +51,7 @@ export default function InventorySummaryScreen() {
           <Card containerStyle={styles.card}>
             <View style={styles.overview}>
               <View style={styles.overviewItem}>
-                <Text style={styles.overviewTitle}>Total Quantity</Text>
+                <Text style={styles.overviewTitle}>Total Qty</Text>
                 <Text style={styles.overviewValue}>479 Items</Text>
               </View>
               <View style={styles.overviewItem}>
@@ -80,16 +69,16 @@ export default function InventorySummaryScreen() {
                 strokeWidth={16}
                 radius={32}
                 chartConfig={{
-                  backgroundGradientFrom: "#f5f5f5",
-                  backgroundGradientTo: "#f5f5f5",
-                  color: (opacity = 1) => `rgba(0, 123, 255, ${opacity})`,
+                  backgroundGradientFrom: "#fff",
+                  backgroundGradientTo: "#fff",
+                  color: (opacity = 1) => `rgba(0, 0, 255, ${opacity})`,
                 }}
                 hideLegend={false}
               />
             </View>
 
             {/* Best Selling Items */}
-            <Text style={styles.sectionTitle}>Top 3 Best-Selling Items</Text>
+            <Text style={styles.sectionTitle}>3 Best Selling Items</Text>
             <View style={styles.bestSellingItems}>
               <Text style={styles.itemText}>240 Items - Chicken Karage</Text>
               <Text style={styles.itemText}>88 Items - Beef Nyakinyo</Text>
@@ -99,7 +88,7 @@ export default function InventorySummaryScreen() {
 
           {/* Inventory List */}
           <Card containerStyle={styles.card}>
-            <Text style={styles.sectionTitle}>Inventory List</Text>
+            <Text style={styles.sectionTitle}>Items Inventory List</Text>
             <View style={styles.item}>
               <Text style={styles.itemName}>Ekiddo Snack Pack</Text>
               <Text style={styles.itemPrice}>$66.75</Text>
@@ -112,7 +101,7 @@ export default function InventorySummaryScreen() {
             </View>
           </Card>
         </ScrollView>
-      </View>
+      </Animated.View>
     </SafeAreaView>
   );
 }
@@ -120,36 +109,26 @@ export default function InventorySummaryScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-  },
-  modalContainer: {
-    flex: 1,
-    justifyContent: 'flex-start',
-    alignItems: 'flex-start',
-  },
-  sidebar: {
-    width: 250, // Width of the sidebar
-    backgroundColor: '#004d40',
-    zIndex: 1, // Ensure sidebar is on top
-    elevation: 5,
-    flex: 1,
-    paddingTop: 20, // Adjust for top padding
+    flexDirection: 'row',
   },
   mainContent: {
     flex: 1,
     backgroundColor: '#f5f5f5',
+    marginLeft: 0, // No marginLeft required
+  },
+  scrollContent: {
+    flex: 1,
   },
   headerWrapper: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     padding: 16,
-    backgroundColor: '#fff',
-    elevation: 1, // Add shadow for elevation effect
+    backgroundColor: '#f5f5f5',
   },
   menuButton: {
     backgroundColor: '#004d40',
     padding: 10,
     borderRadius: 5,
-    elevation: 1,
   },
   menuIcon: {
     width: 30,
@@ -165,7 +144,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#004d40',
     padding: 10,
     borderRadius: 5,
-    elevation: 1,
   },
   notificationText: {
     fontSize: 18,
@@ -174,19 +152,16 @@ const styles = StyleSheet.create({
   notificationCount: {
     fontSize: 16,
     color: '#004d40',
-    marginLeft: 8,
   },
   card: {
     borderRadius: 10,
     marginVertical: 10,
     backgroundColor: '#fff',
-    elevation: 2, // Add shadow to card
   },
   overview: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     marginBottom: 20,
-    padding: 10,
   },
   overviewItem: {
     alignItems: 'center',
@@ -204,7 +179,6 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
     marginVertical: 10,
-    color: '#004d40',
   },
   bestSellingItems: {
     marginTop: 10,
@@ -221,7 +195,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     marginVertical: 10,
-    paddingHorizontal: 10,
   },
   itemName: {
     fontSize: 16,

@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useNavigation } from '@react-navigation/native';
-import { auth ,firestore} from '../firebase'; // Adjust the path as necessary
+import { auth ,firestor} from '../firebase'; // Adjust the path as necessary
 
 const RegistrationScreen = () => {
   const navigation = useNavigation();
